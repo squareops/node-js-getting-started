@@ -16,9 +16,9 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '20'))
   }
 //check every minute for changes
-  triggers {
-    pollSCM('*/1 * * * *')
-  }
+//  triggers {
+//    pollSCM('*/1 * * * *')
+//  }
   stages {
     //Build container image
     stage('Build') {
