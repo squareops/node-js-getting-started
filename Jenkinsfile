@@ -56,7 +56,7 @@ spec:
             apk --update add ca-certificates wget python curl tar jq
             apk -Uuv add make groff less python py-pip
             pip install awscli
-            aws ecr get-login --region ${AWS_REGION} --no-include-email
+            $(aws ecr get-login --region ${AWS_REGION} --no-include-email)
             docker build --network=host -t ${DOCKER_REPO}:${BUILD_NUMBER} .
             docker push ${DOCKER_REPO}:${BUILD_NUMBER}
             echo 'Start Deploying'
