@@ -9,7 +9,6 @@ pipeline {
     //put your environment variables
     doError = '0'
     DOCKER_REPO = "421320058418.dkr.ecr.eu-central-1.amazonaws.com/jenkins-demo"
-    ECR_REPO_NAME = "jenkins-demo"
     AWS_REGION = "eu-central-1"
     HELM_RELEASE_NAME = "node-demo"
     CLUSTER_NAME = "test-squareops-eks"
@@ -47,11 +46,10 @@ spec:
         }
       }
       steps {
-        withAWS(credentials: 'jenkins-demo') {
+        withAWS(credentials: 'jenkins-demo', region: ${AWS_REGION}) {
         container('dind') {
           script {
             sh '''
-            docker build --network=host -t ${DOCKER_REPO}:${BUILD_NUMBER} .
             # Put your test cases
             echo 'Starting test cases'
             echo 'Creating Artifact'
@@ -59,6 +57,7 @@ spec:
             apk -Uuv add make groff less python py-pip
             pip install awscli
             aws ecr get-login --region ${AWS_REGION} --no-include-email
+            docker build --network=host -t ${DOCKER_REPO}:${BUILD_NUMBER} .
             docker push ${DOCKER_REPO}:${BUILD_NUMBER}
             echo 'Start Deploying'
             aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
@@ -70,7 +69,7 @@ spec:
             curl -o /tmp/$FILENAME ${HELM_URL} \
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
             && mv /tmp/linux-amd64/helm /bin/helm
-            data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO_NAME} --image-id imageTag=${BUILD_NUMBER} | jq --raw-output '.imageScanFindings.findings[].severity')
+            data=$(aws ecr describe-image-scan-findings --repository-name ${DOCKER_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq --raw-output '.imageScanFindings.findings[].severity')
             if [[ "$data" == *"CRITICAL"* ]]; then
               exit 1
             else
