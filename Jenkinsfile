@@ -4,7 +4,7 @@ def COLOR_MAP = [
 ]
 
 pipeline {
-  agent none
+  agent any
   environment {
     //put your environment variables
     doError = '0'
