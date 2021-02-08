@@ -70,6 +70,7 @@ spec:
             curl -o /tmp/$FILENAME ${HELM_URL} \
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
             && mv /tmp/linux-amd64/helm /bin/helm
+            sleep 10
             data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq --raw-output '.imageScanFindings.findings[].severity')
             case "$data" in
               *"CRITICAL"*) exit 1 ;;
