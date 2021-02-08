@@ -46,7 +46,7 @@ spec:
         }
       }
       steps {
-        withAWS(credentials: 'jenkins-demo', region: ${AWS_REGION}) {
+        withAWS(credentials: 'jenkins-demo', region: '${AWS_REGION}') {
         container('dind') {
           script {
             sh '''
