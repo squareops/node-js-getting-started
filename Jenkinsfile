@@ -21,6 +21,7 @@ pipeline {
   triggers {
     pollSCM('*/1 * * * *')
   }
+  tools {nodejs "nodejs-sonarqube"}
   stages {
     // Check code quality using sonarqube
     stage('Code Quality Check via SonarQube') {
