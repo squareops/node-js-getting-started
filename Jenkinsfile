@@ -9,11 +9,13 @@ pipeline {
     //put your environment variables
     doError = '0'
     DOCKER_REPO = "421320058418.dkr.ecr.eu-central-1.amazonaws.com/jenkins-demo"
+    ECR_REPO_NAME = "jenkins-demo"
     AWS_REGION = "eu-central-1"
     HELM_RELEASE_NAME = "node-demo"
+    CLUSTER_NAME = "test-squareops-eks"
   }
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '20'))
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '20'))
   }
 //check every minute for changes
   triggers {
@@ -49,21 +51,17 @@ spec:
         container('dind') {
           script {
             sh '''
-            docker build --network=host \
-            -t ${DOCKER_REPO}:${BUILD_NUMBER} .
-            #put your Test cases
+            docker build --network=host -t ${DOCKER_REPO}:${BUILD_NUMBER} .
+            # Put your test cases
             echo 'Starting test cases'
-            echo 'Creating Artefact'
+            echo 'Creating Artifact'
             apk --update add ca-certificates wget python curl tar jq
             apk -Uuv add make groff less python py-pip
             pip install awscli
-            $(aws ecr get-login --region $AWS_REGION --no-include-email)
+            aws ecr get-login --region ${AWS_REGION} --no-include-email
             docker push ${DOCKER_REPO}:${BUILD_NUMBER}
-            echo 'Start deploying'
-            abc=${ENV}_cluster
-            echo $abc
-            CLUSTER_NAME=test-squareops-eks
-            aws eks --region eu-central-1  update-kubeconfig --name ${CLUSTER_NAME}
+            echo 'Start Deploying'
+            aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
             VERSION=v3.2.4
             echo $VERSION
             FILENAME=helm-${VERSION}-linux-amd64.tar.gz
@@ -71,14 +69,20 @@ spec:
             echo $HELM_URL
             curl -o /tmp/$FILENAME ${HELM_URL} \
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
-            && mv /tmp/linux-amd64/helm /bin/helm 
-            helm upgrade --install node-demo ./helm --set image.repository=421320058418.dkr.ecr.eu-central-1.amazonaws.com/jenkins-demo --set image.tag=${BUILD_NUMBER}            
+            && mv /tmp/linux-amd64/helm /bin/helm
+            data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO_NAME} --image-id imageTag=${BUILD_NUMBER} | jq --raw-output '.imageScanFindings.findings[].severity')
+            if [[ "$data" == *"CRITICAL"* ]]; then
+              exit 1
+            else
+              helm upgrade --install node-demo ./helm \
+              --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER}
+            fi            
             '''
           } //script
         } //container
-        }
+        } //withAWS
       } //steps
-}
+    } 
 // slack notification configuration
   // stage('Error') {
   //   // when doError is equal to 1, return an error
@@ -99,7 +103,7 @@ spec:
   //       echo "Success :)"
   //   }
   // }
-}
+  } //stages
     // Post-build actions
   // post {
   //     always {
