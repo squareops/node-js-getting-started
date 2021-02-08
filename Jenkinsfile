@@ -70,13 +70,13 @@ spec:
             curl -o /tmp/$FILENAME ${HELM_URL} \
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
             && mv /tmp/linux-amd64/helm /bin/helm
-            data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq -r '.imageScanFindings.findings[].severity')
+            data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION}
             echo $data
-            case "$data" in
-              *"CRITICAL"*) exit 1 ;;
-              *"NOT RUN"*) helm upgrade --install node-demo ./helm \
-              --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER} ;;
-            esac
+            // case "$data" in
+            //   *"CRITICAL"*) exit 1 ;;
+            //   *"NOT RUN"*) helm upgrade --install node-demo ./helm \
+            //   --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER} ;;
+            // esac
             '''
           } //script
         } //container
