@@ -22,6 +22,18 @@ pipeline {
     pollSCM('*/1 * * * *')
   }
   stages {
+    // Check code quality using sonarqube
+    stage('Code Quality Check via SonarQube') {
+      steps {
+        script {
+            def scannerHome = tool 'sonarqube';
+              withSonarQubeEnv("sonarqube-jenkins") {
+              sh "${tool("sonarqube")}/bin/sonar-scanner \
+              -Dsonar.projectKey=jenkins-scan"
+          }
+        }
+      }
+    }  
     //Build container image
     stage('Build') {
       agent {
