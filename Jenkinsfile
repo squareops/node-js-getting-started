@@ -9,6 +9,7 @@ pipeline {
     //put your environment variables
     doError = '0'
     DOCKER_REPO = "421320058418.dkr.ecr.eu-central-1.amazonaws.com/jenkins-demo"
+    ECR_REPO = "jenkins-demo"
     AWS_REGION = "eu-central-1"
     HELM_RELEASE_NAME = "node-demo"
     CLUSTER_NAME = "test-squareops-eks"
@@ -69,7 +70,7 @@ spec:
             curl -o /tmp/$FILENAME ${HELM_URL} \
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
             && mv /tmp/linux-amd64/helm /bin/helm
-            data=$(aws ecr describe-image-scan-findings --repository-name ${DOCKER_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq --raw-output '.imageScanFindings.findings[].severity')
+            data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq --raw-output '.imageScanFindings.findings[].severity')
             if [[ "$data" == *"CRITICAL"* ]]; then
               exit 1
             else
