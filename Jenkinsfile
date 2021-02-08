@@ -50,7 +50,7 @@ spec:
         withAWS(credentials: 'jenkins-demo') {
         container('dind') {
           script {
-            sh '
+            bash '''
             # Put your test cases
             echo 'Starting test cases'
             echo 'Creating Artifact'
@@ -69,16 +69,14 @@ spec:
             echo $HELM_URL
             curl -o /tmp/$FILENAME ${HELM_URL} \
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
-            && mv /tmp/linux-amd64/helm /bin/helm            
-            '
-            sh '''#!/bin/bash
+            && mv /tmp/linux-amd64/helm /bin/helm
             data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq --raw-output '.imageScanFindings.findings[].severity')
             if [[ "$data" == *"CRITICAL"* ]]; then
               exit 1
             else
               helm upgrade --install node-demo ./helm \
               --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER}
-            fi
+            fi            
             '''
           } //script
         } //container
