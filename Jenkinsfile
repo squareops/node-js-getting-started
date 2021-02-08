@@ -13,6 +13,7 @@ pipeline {
     AWS_REGION = "eu-central-1"
     HELM_RELEASE_NAME = "node-demo"
     CLUSTER_NAME = "test-squareops-eks"
+    COUNT_VALUE = '1'
   }
   options {
     buildDiscarder(logRotator(numToKeepStr: '20'))
@@ -33,6 +34,11 @@ pipeline {
               -Dsonar.projectKey=jenkins-scan"
           }
         }
+      }
+    }
+    stage('Abort pipeline if SonarQube Fails') {
+      steps {
+        waitForQualityGate abortPipeline: true
       }
     }  
     //Build container image
@@ -85,7 +91,7 @@ spec:
             && mv /tmp/linux-amd64/helm /bin/helm
             sleep 30
             count=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq -r '.imageScanFindings.findings[]?.severity' | grep "CRITICAL" | wc -l)
-            value=1
+            value=${COUNT_VALUE}
             if [ $count -gt $value ]
             then
               exit 1
