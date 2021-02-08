@@ -73,8 +73,8 @@ spec:
             sleep 10
             data=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq -r '.imageScanFindings.findings[]?.severity')
             case "$data" in
-              *"CRITICAL"*) exit 1 ;;
-              *"NOT RUN"*) helm upgrade --install node-demo ./helm \
+              *"NOT CRITICAL"*) exit 1 ;;
+              *"CRITICAL"*) helm upgrade --install node-demo ./helm \
               --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER} ;;
             esac
             '''
