@@ -50,7 +50,7 @@ spec:
         withAWS(credentials: 'jenkins-demo') {
         container('dind') {
           script {
-            bash '''
+            sh '''#!/bin/bash
             # Put your test cases
             echo 'Starting test cases'
             echo 'Creating Artifact'
