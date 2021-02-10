@@ -6,7 +6,7 @@ def COLOR_MAP = [
 pipeline {
   agent any
   environment {
-    //put your environment variables
+    // Put your environment variables
     doError = '0'
     DOCKER_REPO = "421320058418.dkr.ecr.eu-central-1.amazonaws.com/jenkins-demo"
     ECR_REPO = "jenkins-demo"
@@ -18,7 +18,7 @@ pipeline {
   options {
     buildDiscarder(logRotator(numToKeepStr: '20'))
   }
-  //check every minute for changes
+  // Check every minute for changes
   triggers {
     pollSCM('*/1 * * * *')
   }
@@ -40,7 +40,7 @@ pipeline {
         waitForQualityGate abortPipeline: true
       }
     }  
-    //Build container image
+    // Build container image
     stage('Build') {
       agent {
         kubernetes {
@@ -104,7 +104,7 @@ spec:
         } //withAWS
       } //steps
     } 
-// slack notification configuration
+// Slack notification configuration
   // stage('Error') {
   //   // when doError is equal to 1, return an error
   //   when {
