@@ -1,5 +1,3 @@
-def buildNumber = Jenkins.instance.getItem('jenkins-job').lastSuccessfulBuild.number
-
 def COLOR_MAP = [
     'SUCCESS': 'good',
     'FAILURE': 'danger',
@@ -95,10 +93,10 @@ spec:
             value=${COUNT_VALUE}
             if [ $count -gt $value ]
             then
+              exit 1
+            else
               helm upgrade --install node-demo ./helm \
               --set image.repository=${DOCKER_REPO} --set image.tag=${buildNumber}
-            else
-              exit 1
             fi
             '''
           } //script
