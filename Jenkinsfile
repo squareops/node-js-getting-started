@@ -96,7 +96,7 @@ spec:
               exit 1
             else
               helm upgrade --install node-demo ./helm \
-              --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER}
+              --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER}
             fi
             '''
           } //script
