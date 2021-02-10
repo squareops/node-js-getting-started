@@ -89,7 +89,7 @@ spec:
             && tar -zxvf /tmp/${FILENAME} -C /tmp \
             && mv /tmp/linux-amd64/helm /bin/helm
             sleep 30
-            count=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=${BUILD_NUMBER} --region ${AWS_REGION} | jq -r '.imageScanFindings.findings[]?.severity' | grep "CRITICAL" | wc -l)
+            count=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=v${BUILD_NUMBER} --region ${AWS_REGION} | jq -r '.imageScanFindings.findings[]?.severity' | grep "CRITICAL" | wc -l)
             value=${COUNT_VALUE}
             if [ $count -gt $value ]
             then
