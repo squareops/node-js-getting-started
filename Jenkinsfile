@@ -22,7 +22,6 @@ pipeline {
   triggers {
     pollSCM('*/1 * * * *')
   }
-  tools {nodejs "nodejs-sonarqube"}
   stages {
     // Check code quality using sonarqube
     stage('Code Quality Check via SonarQube') {
@@ -66,7 +65,7 @@ spec:
         }
       }
       steps {
-        withAWS(credentials: 'jenkins-demo') {
+        withAWS(credentials: 'jenkins-user') {
         container('dind') {
           script {
             sh '''
