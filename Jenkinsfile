@@ -18,10 +18,10 @@ pipeline {
   options {
     buildDiscarder(logRotator(numToKeepStr: '20'))
   }
-  // Check every minute for changes
-  triggers {
-    pollSCM('*/1 * * * *')
-  }
+  // // Check every minute for changes
+  // triggers {
+  //   pollSCM('*/1 * * * *')
+  // }
   stages {
     // Check code quality using sonarqube
     stage('Code Quality Check via SonarQube') {
@@ -95,7 +95,7 @@ spec:
             then
               exit 1
             else
-              helm upgrade --install node-demo ./helm \
+              helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
               --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER}
             fi
             '''
