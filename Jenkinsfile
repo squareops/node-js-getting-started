@@ -18,7 +18,7 @@ pipeline {
   options {
     buildDiscarder(logRotator(numToKeepStr: '20'))
   }
-//check every minute for changes
+  //check every minute for changes
   triggers {
     pollSCM('*/1 * * * *')
   }
@@ -76,8 +76,8 @@ spec:
             apk -Uuv add make groff less python py-pip
             pip install awscli
             $(aws ecr get-login --region ${AWS_REGION} --no-include-email)
-            docker build --network=host -t ${DOCKER_REPO}:${BUILD_NUMBER} .
-            docker push ${DOCKER_REPO}:${BUILD_NUMBER}
+            docker build --network=host -t ${DOCKER_REPO}:v${BUILD_NUMBER} .
+            docker push ${DOCKER_REPO}:v${BUILD_NUMBER}
             echo 'Start Deploying'
             aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
             VERSION=v3.2.4
@@ -96,7 +96,7 @@ spec:
               exit 1
             else
               helm upgrade --install node-demo ./helm \
-              --set image.repository=${DOCKER_REPO} --set image.tag=${buildNumber}
+              --set image.repository=${DOCKER_REPO} --set image.tag=${BUILD_NUMBER}
             fi
             '''
           } //script
