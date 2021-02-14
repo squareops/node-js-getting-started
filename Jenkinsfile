@@ -106,7 +106,7 @@ spec:
       } //steps
     }
     stage("Deploy to Stage?") {
-    steps {
+      steps {
         script {
           def userInput = input(
               id: 'userInput', message: 'Let\'s Promote?', parameters: [
