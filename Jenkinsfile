@@ -5,6 +5,7 @@ def COLOR_MAP = [
 
 pipeline {
   agent any
+  tools {nodejs "nodejs"}
   environment {
     // Put your environment variables
     doError = '0'
