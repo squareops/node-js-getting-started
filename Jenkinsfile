@@ -105,6 +105,28 @@ spec:
       } //steps
     }
     stage("Deploy to Stage?") {
+      agent {
+        kubernetes {
+          label 'jenkinsrun'
+          defaultContainer 'dind'
+          yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: dind
+    image: docker:18.05-dind
+    securityContext:
+      privileged: true
+    volumeMounts:
+      - name: dind-storage
+        mountPath: /var/lib/docker
+  volumes:
+    - name: dind-storage
+      emptyDir: {}
+"""
+        }
+      }
       steps {
         script {
           def userInput = input(
@@ -119,22 +141,22 @@ spec:
               withAWS(credentials: 'jenkins-user') {
                 container('dind') {
                   script {
-                      sh '''
-                      apk --update add ca-certificates wget python curl tar jq
-                      apk -Uuv add make groff less python py-pip
-                      pip install awscli
-                      aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
-                      VERSION=v3.2.4
-                      echo $VERSION
-                      FILENAME=helm-${VERSION}-linux-amd64.tar.gz
-                      HELM_URL=https://get.helm.sh/${FILENAME}
-                      echo $HELM_URL
-                      curl -o /tmp/$FILENAME ${HELM_URL} \
-                      && tar -zxvf /tmp/${FILENAME} -C /tmp \
-                      && mv /tmp/linux-amd64/helm /bin/helm
-                      helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
-                      --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER} -n stage
-                      '''
+                    sh '''
+                    apk --update add ca-certificates wget python curl tar jq
+                    apk -Uuv add make groff less python py-pip
+                    pip install awscli
+                    aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
+                    VERSION=v3.2.4
+                    echo $VERSION
+                    FILENAME=helm-${VERSION}-linux-amd64.tar.gz
+                    HELM_URL=https://get.helm.sh/${FILENAME}
+                    echo $HELM_URL
+                    curl -o /tmp/$FILENAME ${HELM_URL} \
+                    && tar -zxvf /tmp/${FILENAME} -C /tmp \
+                    && mv /tmp/linux-amd64/helm /bin/helm
+                    helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
+                    --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER} -n stage
+                    '''
                   }
                 }    
               }
