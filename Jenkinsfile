@@ -46,6 +46,7 @@ spec:
   stages {
     // Check code quality using sonarqube
     stage('Code Quality Check via SonarQube') {
+      agent any
       steps {
         script {
             def scannerHome = tool 'sonarqube';
@@ -57,6 +58,7 @@ spec:
       }
     }
     stage('Abort pipeline if SonarQube Fails') {
+      agent any
       steps {
         waitForQualityGate abortPipeline: true
       }
