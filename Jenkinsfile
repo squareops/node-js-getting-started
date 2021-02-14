@@ -4,28 +4,29 @@ def COLOR_MAP = [
 ]
 
 pipeline {
-  agent {
-    kubernetes {
-      label 'jenkinsrun'
-      defaultContainer 'dind'
-      yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: dind
-    image: docker:18.05-dind
-    securityContext:
-      privileged: true
-    volumeMounts:
-      - name: dind-storage
-        mountPath: /var/lib/docker
-  volumes:
-    - name: dind-storage
-      emptyDir: {}
-"""
-    }
-  }
+//   agent {
+//     kubernetes {
+//       label 'jenkinsrun'
+//       defaultContainer 'dind'
+//       yaml """
+// apiVersion: v1
+// kind: Pod
+// spec:
+//   containers:
+//   - name: dind
+//     image: docker:18.05-dind
+//     securityContext:
+//       privileged: true
+//     volumeMounts:
+//       - name: dind-storage
+//         mountPath: /var/lib/docker
+//   volumes:
+//     - name: dind-storage
+//       emptyDir: {}
+// """
+//     }
+//   }
+  agent any
   environment {
     // Put your environment variables
     doError = '0'
