@@ -4,29 +4,28 @@ def COLOR_MAP = [
 ]
 
 pipeline {
-//   agent {
-//     kubernetes {
-//       label 'jenkinsrun'
-//       defaultContainer 'dind'
-//       yaml """
-// apiVersion: v1
-// kind: Pod
-// spec:
-//   containers:
-//   - name: dind
-//     image: docker:18.05-dind
-//     securityContext:
-//       privileged: true
-//     volumeMounts:
-//       - name: dind-storage
-//         mountPath: /var/lib/docker
-//   volumes:
-//     - name: dind-storage
-//       emptyDir: {}
-// """
-//     }
-//   }
-  agent any
+  agent {
+    kubernetes {
+      label 'jenkinsrun'
+      defaultContainer 'dind'
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: dind
+    image: docker:18.05-dind
+    securityContext:
+      privileged: true
+    volumeMounts:
+      - name: dind-storage
+        mountPath: /var/lib/docker
+  volumes:
+    - name: dind-storage
+      emptyDir: {}
+"""
+    }
+  }
   environment {
     // Put your environment variables
     doError = '0'
@@ -47,21 +46,23 @@ pipeline {
   stages {
     // Check code quality using sonarqube
     stage('Code Quality Check via SonarQube') {
-      // agent any
       steps {
-        script {
+        container ('dind') {
+          script {
             def scannerHome = tool 'sonarqube';
               withSonarQubeEnv("sonarqube-jenkins") {
               sh "${tool("sonarqube")}/bin/sonar-scanner \
               -Dsonar.projectKey=jenkins-scan"
+            }
           }
         }
       }
     }
     stage('Abort pipeline if SonarQube Fails') {
-      // agent any
       steps {
-        waitForQualityGate abortPipeline: true
+        container ('dind') {
+          waitForQualityGate abortPipeline: true
+        }
       }
     }  
     // Build container image
