@@ -4,7 +4,28 @@ def COLOR_MAP = [
 ]
 
 pipeline {
-  agent any
+  agent {
+    kubernetes {
+      label 'jenkinsrun'
+      defaultContainer 'dind'
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: dind
+    image: docker:18.05-dind
+    securityContext:
+      privileged: true
+    volumeMounts:
+      - name: dind-storage
+        mountPath: /var/lib/docker
+  volumes:
+    - name: dind-storage
+      emptyDir: {}
+"""
+    }
+  }
   environment {
     // Put your environment variables
     doError = '0'
@@ -42,28 +63,6 @@ pipeline {
     }  
     // Build container image
     stage('Build') {
-      agent {
-        kubernetes {
-          label 'jenkinsrun'
-          defaultContainer 'dind'
-          yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: dind
-    image: docker:18.05-dind
-    securityContext:
-      privileged: true
-    volumeMounts:
-      - name: dind-storage
-        mountPath: /var/lib/docker
-  volumes:
-    - name: dind-storage
-      emptyDir: {}
-"""
-        }
-      }
       steps {
         withAWS(credentials: 'jenkins-user') {
         container('dind') {
@@ -91,7 +90,7 @@ spec:
             sleep 30
             count=$(aws ecr describe-image-scan-findings --repository-name ${ECR_REPO} --image-id imageTag=v${BUILD_NUMBER} --region ${AWS_REGION} | jq -r '.imageScanFindings.findings[]?.severity' | grep "CRITICAL" | wc -l)
             value=${COUNT_VALUE}
-            if [ $count -gt $value ]
+            if [ $count -lt $value ]
             then
               exit 1
             else
@@ -103,6 +102,45 @@ spec:
         } //container
         } //withAWS
       } //steps
+    }
+    stage("Deploy to Stage?") {
+    steps {
+        script {
+          def userInput = input(
+              id: 'userInput', message: 'Let\'s Promote?', parameters: [
+                  [$class: 'TextParameterDefinition', defaultValue: 'stage', description: 'Environment', name: 'Env']
+              ]
+          )
+          echo ("Env: "+userInput)
+
+          if ("$userInput" == "stage") {
+            stage ("Deploying to Stage") {
+              withAWS(credentials: 'jenkins-user') {
+                container('dind') {
+                  script {
+                      sh '''
+                      apk --update add ca-certificates wget python curl tar jq
+                      apk -Uuv add make groff less python py-pip
+                      pip install awscli
+                      aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
+                      VERSION=v3.2.4
+                      echo $VERSION
+                      FILENAME=helm-${VERSION}-linux-amd64.tar.gz
+                      HELM_URL=https://get.helm.sh/${FILENAME}
+                      echo $HELM_URL
+                      curl -o /tmp/$FILENAME ${HELM_URL} \
+                      && tar -zxvf /tmp/${FILENAME} -C /tmp \
+                      && mv /tmp/linux-amd64/helm /bin/helm
+                      helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
+                      --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER} -n stage
+                      '''
+                  }
+                }    
+              }
+            }
+          }
+        }
+      }
     } 
 // Slack notification configuration
   // stage('Error') {
