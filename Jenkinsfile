@@ -2,7 +2,6 @@ def COLOR_MAP = [
     'SUCCESS': 'good',
     'FAILURE': 'danger',
 ]
-
 pipeline {
   agent any
   tools {nodejs "nodejs"}
@@ -70,8 +69,6 @@ spec:
         container('dind') {
           script {
             sh '''
-            # Put your test cases
-            echo 'Starting test cases'
             echo 'Creating Artifact'
             apk --update add ca-certificates wget python curl tar jq
             apk -Uuv add make groff less python py-pip
@@ -79,8 +76,6 @@ spec:
             $(aws ecr get-login --region ${AWS_REGION} --no-include-email)
             docker build --network=host -t ${DOCKER_REPO}:v${BUILD_NUMBER} .
             docker push ${DOCKER_REPO}:v${BUILD_NUMBER}
-            echo 'Start Deploying'
-            aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
             VERSION=v3.2.4
             echo $VERSION
             FILENAME=helm-${VERSION}-linux-amd64.tar.gz
@@ -95,10 +90,11 @@ spec:
             if [ $count -lt $value ]
             then
               exit 1
-            else
-              helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
-              --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER}
             fi
+            echo 'Start Deploying'
+            aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
+            helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
+            --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER}
             '''
           } //script
         } //container
@@ -106,6 +102,19 @@ spec:
       } //steps
     }
     stage("Deploy to Stage?") {
+      agent none
+      steps {
+        script {
+          def userInput = input(
+              id: 'userInput', message: 'Let\'s Promote?', parameters: [
+                  [$class: 'TextParameterDefinition', defaultValue: 'stage', description: 'Environment', name: 'Env']
+              ]
+          )
+          echo ("Env: "+userInput)
+        }
+      }
+    }
+    stage("Deploying to Stage") {
       agent {
         kubernetes {
           label 'jenkinsrun'
@@ -130,13 +139,6 @@ spec:
       }
       steps {
         script {
-          def userInput = input(
-              id: 'userInput', message: 'Let\'s Promote?', parameters: [
-                  [$class: 'TextParameterDefinition', defaultValue: 'stage', description: 'Environment', name: 'Env']
-              ]
-          )
-          echo ("Env: "+userInput)
-
           if ("$userInput" == "stage") {
             stage ("Deploying to Stage") {
               withAWS(credentials: 'jenkins-user') {
