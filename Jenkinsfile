@@ -2,6 +2,7 @@ def COLOR_MAP = [
     'SUCCESS': 'good',
     'FAILURE': 'danger',
 ]
+
 pipeline {
   agent any
   tools {nodejs "nodejs"}
@@ -102,19 +103,6 @@ spec:
       } //steps
     }
     stage("Deploy to Stage?") {
-      agent none
-      steps {
-        script {
-          def userInput = input(
-              id: 'userInput', message: 'Let\'s Promote?', parameters: [
-                  [$class: 'TextParameterDefinition', defaultValue: 'stage', description: 'Environment', name: 'Env']
-              ]
-          )
-          echo ("Env: "+userInput)
-        }
-      }
-    }
-    stage("Deploying to Stage") {
       agent {
         kubernetes {
           label 'jenkinsrun'
@@ -139,6 +127,13 @@ spec:
       }
       steps {
         script {
+          def userInput = input(
+              id: 'userInput', message: 'Let\'s Promote?', parameters: [
+                  [$class: 'TextParameterDefinition', defaultValue: 'stage', description: 'Environment', name: 'Env']
+              ]
+          )
+          echo ("Env: "+userInput)
+
           if ("$userInput" == "stage") {
             stage ("Deploying to Stage") {
               withAWS(credentials: 'jenkins-user') {
