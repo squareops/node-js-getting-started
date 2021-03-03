@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: 878291833136.dkr.ecr.ap-south-1.amazonaws.com/node-demo
   pullPolicy: IfNotPresent
-  tag: 4
+  tag: v1
 
 imagePullSecrets: []
 nameOverride: ""
@@ -36,13 +36,16 @@ service:
   port: 5000
 
 ingress:
-  enabled: false
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  enabled: true
+  annotations: 
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/tls-acme: "false"
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: chart-example.local
-      paths: []
+    - host: sample-app.squareops.xyz
+      paths: ["/"]
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -65,3 +68,17 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+hpa:
+  maxReplicas: 15
+  averageUtilization: 80
+  scaleUp:
+    stabilizationWindowSeconds: 0
+    policies:
+      value: 100
+      periodSeconds: 5
+  scaleDown:
+    stabilizationWindowSeconds: 30
+    policies:
+      value: 25
+      periodSeconds: 60
