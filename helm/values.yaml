@@ -48,7 +48,7 @@ ingress:
       SecAuditEngine RelevantOnly
       SecAuditLogParts ABIJDEFHZ
       SecAuditLog /var/log/modsec_audit.log
-      SecRule REQUEST_HEADERS:User-Agent "fern-scanner" "log,deny,id:107,status:403,msg:\'Fern Scanner Identified\'"
+      SecRule REQUEST_HEADERS:User-Agent "fern-scanner" "log,deny,id:107,status:403,msg:'Fern Scanner Identified'"
       Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
   hosts:
     - host: sample-app.squareops.xyz
