@@ -95,7 +95,7 @@ spec:
             echo 'Start Deploying'
             aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
             helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
-            --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER}
+            --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER} -f ./helm/values/dev-values.yaml
             '''
           } //script
         } //container
@@ -153,7 +153,7 @@ spec:
                     && tar -zxvf /tmp/${FILENAME} -C /tmp \
                     && mv /tmp/linux-amd64/helm /bin/helm
                     helm upgrade --install ${HELM_RELEASE_NAME} ./helm \
-                    --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER} -n stage
+                    --set image.repository=${DOCKER_REPO} --set image.tag=v${BUILD_NUMBER} -f ./helm/values/stage-values.yaml -n stage
                     '''
                   }
                 }    
