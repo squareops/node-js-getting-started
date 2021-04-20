@@ -9,9 +9,9 @@ pipeline {
   environment {
     // Put your environment variables
     doError = '0'
-    DOCKER_REPO = "421320058418.dkr.ecr.ap-southeast-1.amazonaws.com/jenkins-demo"
-    ECR_REPO = "jenkins-demo"
-    AWS_REGION = "ap-southeast-1"
+    DOCKER_REPO = "421320058418.dkr.ecr.eu-central-1.amazonaws.com/nodejs-jenkins-demo"
+    ECR_REPO = "nodejs-jenkins-demo"
+    AWS_REGION = "eu-central-1"
     HELM_RELEASE_NAME = "node-demo"
     CLUSTER_NAME = "demo-squareops-eks"
     COUNT_VALUE = '1'
